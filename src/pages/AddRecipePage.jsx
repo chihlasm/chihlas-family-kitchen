@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import { Plus, Trash2, ArrowLeft, GripVertical } from 'lucide-react'
+import { Plus, Trash2, ArrowLeft } from 'lucide-react'
 
 const CATEGORIES = ['Breakfast', 'Mains', 'Sides', 'Desserts', 'Soups', 'Sauces', 'Drinks']
 
@@ -34,27 +34,17 @@ export default function AddRecipePage() {
     setForm(f => ({ ...f, [key]: value }))
   }
 
-  // Ingredients
   function updateIngredient(id, key, value) {
     setIngredients(prev => prev.map(i => i.id === id ? { ...i, [key]: value } : i))
   }
-  function addIngredient() {
-    setIngredients(prev => [...prev, emptyIngredient()])
-  }
-  function removeIngredient(id) {
-    setIngredients(prev => prev.filter(i => i.id !== id))
-  }
+  function addIngredient() { setIngredients(prev => [...prev, emptyIngredient()]) }
+  function removeIngredient(id) { setIngredients(prev => prev.filter(i => i.id !== id)) }
 
-  // Steps
   function updateStep(id, key, value) {
     setSteps(prev => prev.map(s => s.id === id ? { ...s, [key]: value } : s))
   }
-  function addStep() {
-    setSteps(prev => [...prev, emptyStep()])
-  }
-  function removeStep(id) {
-    setSteps(prev => prev.filter(s => s.id !== id))
-  }
+  function addStep() { setSteps(prev => [...prev, emptyStep()]) }
+  function removeStep(id) { setSteps(prev => prev.filter(s => s.id !== id)) }
 
   async function handleSave() {
     if (!form.title.trim()) { setError('Recipe title is required.'); return }
@@ -83,7 +73,6 @@ export default function AddRecipePage() {
 
     if (recipeErr) { setError(recipeErr.message); setSaving(false); return }
 
-    // Insert ingredients
     const validIngredients = ingredients.filter(i => i.name.trim())
     if (validIngredients.length > 0) {
       await supabase.from('ingredients').insert(
@@ -97,7 +86,6 @@ export default function AddRecipePage() {
       )
     }
 
-    // Insert steps
     const validSteps = steps.filter(s => s.instruction.trim())
     if (validSteps.length > 0) {
       await supabase.from('steps').insert(
@@ -114,162 +102,161 @@ export default function AddRecipePage() {
   }
 
   return (
-    <div style={styles.page}>
-      {/* Header */}
-      <div style={styles.header}>
-        <button style={styles.backBtn} onClick={() => navigate(-1)}>
+    <div className="animate-fade-in" style={{ paddingBottom: 'var(--space-3xl)' }}>
+      <div style={{ marginBottom: 'var(--space-2xl)' }}>
+        <button style={s.backBtn} onClick={() => navigate(-1)}>
           <ArrowLeft size={16} /> Back
         </button>
-        <h1 style={styles.title}>Add a Recipe</h1>
+        <h1>Add a Recipe</h1>
       </div>
 
-      <div style={styles.layout}>
-        {/* Left column */}
-        <div style={styles.col}>
+      <div className="two-col-equal">
+        <div style={s.col}>
+          {/* Basics */}
+          <section style={s.section}>
+            <h2 style={s.sectionTitle}>The Basics</h2>
 
-          {/* Basics card */}
-          <section style={styles.card}>
-            <h2 style={styles.cardTitle}>The Basics</h2>
-
-            <div style={styles.field}>
-              <label style={styles.label}>Recipe title *</label>
-              <input style={styles.input} type="text" placeholder="e.g. Grandma's Lemon Cake"
+            <div style={s.field}>
+              <label style={s.label}>Recipe title *</label>
+              <input className="form-input" type="text" placeholder="e.g. Grandma's Lemon Cake"
                 value={form.title} onChange={e => setField('title', e.target.value)} />
             </div>
 
-            <div style={styles.field}>
-              <label style={styles.label}>Short description</label>
-              <textarea style={{ ...styles.input, ...styles.textarea }} placeholder="A few words about this dish…"
+            <div style={s.field}>
+              <label style={s.label}>Short description</label>
+              <textarea className="form-input" placeholder="A few words about this dish…"
                 value={form.description} onChange={e => setField('description', e.target.value)} rows={3} />
             </div>
 
-            <div style={styles.row}>
-              <div style={styles.field}>
-                <label style={styles.label}>Category</label>
-                <select style={styles.input} value={form.category} onChange={e => setField('category', e.target.value)}>
+            <div className="form-row">
+              <div style={s.field}>
+                <label style={s.label}>Category</label>
+                <select className="form-input" value={form.category} onChange={e => setField('category', e.target.value)}>
                   <option value="">Select…</option>
                   {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Servings</label>
-                <input style={styles.input} type="number" min="1" placeholder="4"
+              <div style={s.field}>
+                <label style={s.label}>Servings</label>
+                <input className="form-input" type="number" min="1" placeholder="4"
                   value={form.servings} onChange={e => setField('servings', e.target.value)} />
               </div>
             </div>
 
-            <div style={styles.row}>
-              <div style={styles.field}>
-                <label style={styles.label}>Prep time (min)</label>
-                <input style={styles.input} type="number" min="0" placeholder="15"
+            <div className="form-row">
+              <div style={s.field}>
+                <label style={s.label}>Prep time (min)</label>
+                <input className="form-input" type="number" min="0" placeholder="15"
                   value={form.prep_time_minutes} onChange={e => setField('prep_time_minutes', e.target.value)} />
               </div>
-              <div style={styles.field}>
-                <label style={styles.label}>Cook time (min)</label>
-                <input style={styles.input} type="number" min="0" placeholder="45"
+              <div style={s.field}>
+                <label style={s.label}>Cook time (min)</label>
+                <input className="form-input" type="number" min="0" placeholder="45"
                   value={form.cook_time_minutes} onChange={e => setField('cook_time_minutes', e.target.value)} />
               </div>
             </div>
 
-            <div style={styles.field}>
-              <label style={styles.label}>Photo URL (optional)</label>
-              <input style={styles.input} type="url" placeholder="https://…"
+            <div style={s.field}>
+              <label style={s.label}>Photo URL (optional)</label>
+              <input className="form-input" type="url" placeholder="https://…"
                 value={form.image_url} onChange={e => setField('image_url', e.target.value)} />
             </div>
 
-            <label style={styles.checkboxRow}>
+            <label style={s.checkboxRow}>
               <input type="checkbox" checked={form.is_family_original}
-                onChange={e => setField('is_family_original', e.target.checked)} />
+                onChange={e => setField('is_family_original', e.target.checked)}
+                style={{ accentColor: 'var(--color-accent)' }} />
               <span>This is a family original recipe</span>
             </label>
 
             {form.is_family_original && (
-              <div style={{ ...styles.field, marginTop: '0.75rem' }}>
-                <label style={styles.label}>Family note</label>
-                <textarea style={{ ...styles.input, ...styles.textarea }}
+              <div style={{ ...s.field, marginTop: 'var(--space-md)' }}>
+                <label style={s.label}>Family note</label>
+                <textarea className="form-input"
                   placeholder="Where did this recipe come from? Any special memories?"
                   value={form.family_note} onChange={e => setField('family_note', e.target.value)} rows={3} />
               </div>
             )}
           </section>
 
-          {/* Ingredients card */}
-          <section style={styles.card}>
-            <h2 style={styles.cardTitle}>Ingredients</h2>
-            <div style={styles.ingredientHeader}>
-              <span style={{ ...styles.colLabel, flex: '0 0 80px' }}>Amount</span>
-              <span style={{ ...styles.colLabel, flex: '0 0 70px' }}>Unit</span>
-              <span style={{ ...styles.colLabel, flex: 1 }}>Ingredient</span>
+          {/* Ingredients */}
+          <section style={s.section}>
+            <h2 style={s.sectionTitle}>Ingredients</h2>
+            <div style={s.ingHeader}>
+              <span style={{ ...s.colLabel, flex: '0 0 72px' }}>Amount</span>
+              <span style={{ ...s.colLabel, flex: '0 0 64px' }}>Unit</span>
+              <span style={{ ...s.colLabel, flex: 1 }}>Ingredient</span>
             </div>
 
-            {ingredients.map((ing, idx) => (
-              <div key={ing.id} style={styles.ingredientRow}>
-                <input style={{ ...styles.input, flex: '0 0 80px', textAlign: 'center' }}
+            {ingredients.map((ing) => (
+              <div key={ing.id} style={s.ingRow}>
+                <input className="form-input" style={{ flex: '0 0 72px', textAlign: 'center' }}
                   type="text" placeholder="2"
                   value={ing.amount} onChange={e => updateIngredient(ing.id, 'amount', e.target.value)} />
-                <input style={{ ...styles.input, flex: '0 0 70px' }}
+                <input className="form-input" style={{ flex: '0 0 64px' }}
                   type="text" placeholder="cups"
                   value={ing.unit} onChange={e => updateIngredient(ing.id, 'unit', e.target.value)} />
-                <input style={{ ...styles.input, flex: 1 }}
+                <input className="form-input" style={{ flex: 1 }}
                   type="text" placeholder="all-purpose flour"
                   value={ing.name} onChange={e => updateIngredient(ing.id, 'name', e.target.value)} />
-                <button style={styles.removeBtn} onClick={() => removeIngredient(ing.id)}
-                  disabled={ingredients.length === 1}>
+                <button style={s.removeBtn} onClick={() => removeIngredient(ing.id)} disabled={ingredients.length === 1}>
                   <Trash2 size={14} />
                 </button>
               </div>
             ))}
 
-            <button style={styles.addRowBtn} onClick={addIngredient}>
+            <button style={s.addRowBtn} onClick={addIngredient}>
               <Plus size={14} /> Add ingredient
             </button>
           </section>
         </div>
 
-        {/* Right column — Steps */}
-        <div style={styles.col}>
-          <section style={styles.card}>
-            <h2 style={styles.cardTitle}>Instructions</h2>
-            <p style={styles.hint}>Write each step clearly. Add a timer for steps that need it.</p>
+        <div style={s.col}>
+          {/* Steps */}
+          <section style={s.section}>
+            <h2 style={s.sectionTitle}>Instructions</h2>
+            <p style={s.hint}>Write each step clearly. Add a timer for steps that need it.</p>
 
             {steps.map((step, idx) => (
-              <div key={step.id} style={styles.stepRow}>
-                <div style={styles.stepNum}>{idx + 1}</div>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div key={step.id} style={s.stepRow}>
+                <div style={s.stepNum}>{idx + 1}</div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
                   <textarea
-                    style={{ ...styles.input, ...styles.textarea }}
+                    className="form-input"
                     placeholder={`Step ${idx + 1}…`}
                     value={step.instruction}
                     onChange={e => updateStep(step.id, 'instruction', e.target.value)}
                     rows={3}
                   />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
                     <input
-                      style={{ ...styles.input, width: '120px', fontSize: '0.8125rem' }}
+                      className="form-input"
+                      style={{ width: 110, fontSize: '0.8125rem' }}
                       type="number" min="0"
                       placeholder="Timer (min)"
                       value={step.timer_minutes}
                       onChange={e => updateStep(step.id, 'timer_minutes', e.target.value)}
                     />
-                    <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-tertiary)' }}>minutes (optional)</span>
+                    <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-tertiary)' }}>min (optional)</span>
                   </div>
                 </div>
-                <button style={styles.removeBtn} onClick={() => removeStep(step.id)} disabled={steps.length === 1}>
+                <button style={s.removeBtn} onClick={() => removeStep(step.id)} disabled={steps.length === 1}>
                   <Trash2 size={14} />
                 </button>
               </div>
             ))}
 
-            <button style={styles.addRowBtn} onClick={addStep}>
+            <button style={s.addRowBtn} onClick={addStep}>
               <Plus size={14} /> Add step
             </button>
           </section>
 
-          {/* Save area */}
-          {error && <p style={styles.error}>{error}</p>}
-          <div style={styles.actions}>
-            <button style={styles.cancelBtn} onClick={() => navigate(-1)}>Cancel</button>
-            <button style={{ ...styles.saveBtn, opacity: saving ? 0.7 : 1 }} onClick={handleSave} disabled={saving}>
+          {error && <p style={s.error}>{error}</p>}
+
+          <div style={s.actions}>
+            <button className="btn-secondary" onClick={() => navigate(-1)}>Cancel</button>
+            <button className="btn-primary" onClick={handleSave} disabled={saving}
+              style={{ opacity: saving ? 0.7 : 1 }}>
               {saving ? 'Saving…' : 'Save Recipe'}
             </button>
           </div>
@@ -279,110 +266,67 @@ export default function AddRecipePage() {
   )
 }
 
-const styles = {
-  page: { paddingBottom: '3rem' },
-  header: { marginBottom: '1.75rem' },
+const s = {
   backBtn: {
-    display: 'flex', alignItems: 'center', gap: '0.375rem',
+    display: 'flex', alignItems: 'center', gap: '6px',
     background: 'none', border: 'none', cursor: 'pointer',
     color: 'var(--color-text-secondary)', fontSize: '0.875rem',
-    fontFamily: 'var(--font-body)', marginBottom: '1rem',
-    padding: 0,
+    fontFamily: 'var(--font-body)', marginBottom: 'var(--space-lg)', padding: 0,
   },
-  title: { fontSize: '1.75rem' },
-  layout: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '1.5rem',
-    alignItems: 'start',
+  col: { display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' },
+  section: {
+    background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius-lg)', padding: 'var(--space-xl)',
+    display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)',
   },
-  col: { display: 'flex', flexDirection: 'column', gap: '1.5rem' },
-  card: {
-    background: 'var(--color-surface)',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-lg)',
-    padding: '1.5rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    boxShadow: 'var(--shadow-sm)',
-  },
-  cardTitle: {
-    fontFamily: 'var(--font-display)',
-    fontSize: '1.125rem',
-    fontWeight: 500,
-    paddingBottom: '0.75rem',
+  sectionTitle: {
+    fontFamily: 'var(--font-display)', fontSize: '1.125rem',
+    paddingBottom: 'var(--space-md)',
     borderBottom: '1px solid var(--color-border)',
   },
-  field: { display: 'flex', flexDirection: 'column', gap: '0.375rem' },
+  field: { display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' },
   label: { fontSize: '0.8125rem', fontWeight: 500, color: 'var(--color-text-secondary)' },
-  input: {
-    padding: '0.5625rem 0.75rem',
-    border: '1px solid var(--color-border-strong)',
-    borderRadius: 'var(--radius-sm)',
-    background: 'var(--color-bg)',
-    color: 'var(--color-text-primary)',
-    fontSize: '0.9375rem',
-    outline: 'none',
-    width: '100%',
-    fontFamily: 'var(--font-body)',
-  },
-  textarea: { resize: 'vertical', lineHeight: 1.6 },
-  row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' },
+  hint: { fontSize: '0.8125rem', color: 'var(--color-text-tertiary)', marginTop: '-var(--space-sm)' },
   checkboxRow: {
-    display: 'flex', alignItems: 'center', gap: '0.5rem',
-    fontSize: '0.875rem', color: 'var(--color-text-secondary)',
-    cursor: 'pointer',
+    display: 'flex', alignItems: 'center', gap: 'var(--space-sm)',
+    fontSize: '0.875rem', color: 'var(--color-text-secondary)', cursor: 'pointer',
   },
-  hint: { fontSize: '0.8125rem', color: 'var(--color-text-tertiary)', marginTop: '-0.25rem' },
-  ingredientHeader: { display: 'flex', gap: '0.5rem', paddingBottom: '0.25rem' },
-  colLabel: { fontSize: '0.75rem', fontWeight: 500, color: 'var(--color-text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em' },
-  ingredientRow: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
-  stepRow: { display: 'flex', gap: '0.75rem', alignItems: 'flex-start' },
+  ingHeader: {
+    display: 'flex', gap: 'var(--space-sm)', paddingBottom: 'var(--space-xs)',
+  },
+  colLabel: {
+    fontSize: '0.6875rem', fontWeight: 600, color: 'var(--color-text-tertiary)',
+    textTransform: 'uppercase', letterSpacing: '0.05em',
+  },
+  ingRow: { display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' },
+  stepRow: { display: 'flex', gap: 'var(--space-md)', alignItems: 'flex-start' },
   stepNum: {
     width: 28, height: 28, borderRadius: '50%',
     background: 'var(--color-accent-light)',
-    border: '1px solid var(--color-accent-border)',
     color: 'var(--color-accent)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '0.8125rem', fontWeight: 600, flexShrink: 0, marginTop: '0.375rem',
+    fontSize: '0.8125rem', fontWeight: 700, flexShrink: 0,
+    marginTop: 6, fontFamily: 'var(--font-display)',
   },
   removeBtn: {
     background: 'none', border: 'none', cursor: 'pointer',
-    color: 'var(--color-text-tertiary)', padding: '0.25rem',
+    color: 'var(--color-text-tertiary)', padding: 'var(--space-xs)',
     borderRadius: 'var(--radius-sm)', flexShrink: 0,
     display: 'flex', alignItems: 'center',
   },
   addRowBtn: {
-    display: 'flex', alignItems: 'center', gap: '0.375rem',
+    display: 'flex', alignItems: 'center', gap: '6px',
     background: 'none', border: '1px dashed var(--color-border-strong)',
     color: 'var(--color-text-secondary)', borderRadius: 'var(--radius-md)',
-    padding: '0.5rem 0.875rem', fontSize: '0.875rem',
+    padding: 'var(--space-sm) var(--space-md)', fontSize: '0.875rem',
     cursor: 'pointer', fontFamily: 'var(--font-body)',
     width: '100%', justifyContent: 'center',
-    transition: 'background 0.15s',
+    transition: 'border-color 0.15s, color 0.15s',
   },
   error: {
-    fontSize: '0.875rem', color: '#c0392b',
-    background: '#fdf2f2', padding: '0.625rem 0.875rem',
-    borderRadius: 'var(--radius-sm)', border: '1px solid #f5c6c6',
+    fontSize: '0.875rem', color: 'var(--color-error)',
+    background: 'var(--color-error-light)', padding: '10px 14px',
+    borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-error-border)',
   },
-  actions: { display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' },
-  cancelBtn: {
-    padding: '0.625rem 1.25rem',
-    border: '1px solid var(--color-border-strong)',
-    borderRadius: 'var(--radius-md)',
-    background: 'none',
-    color: 'var(--color-text-secondary)',
-    fontSize: '0.9375rem', cursor: 'pointer',
-    fontFamily: 'var(--font-body)',
-  },
-  saveBtn: {
-    padding: '0.625rem 1.5rem',
-    background: 'var(--color-accent)',
-    color: '#fff', border: 'none',
-    borderRadius: 'var(--radius-md)',
-    fontSize: '0.9375rem', fontWeight: 500,
-    cursor: 'pointer', fontFamily: 'var(--font-body)',
-  },
+  actions: { display: 'flex', gap: 'var(--space-md)', justifyContent: 'flex-end' },
 }

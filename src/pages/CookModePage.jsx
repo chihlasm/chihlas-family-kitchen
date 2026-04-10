@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { ArrowLeft, ArrowRight, X, Clock, CheckCircle, ChefHat } from 'lucide-react'
+import { ArrowLeft, ArrowRight, X, Clock, CheckCircle } from 'lucide-react'
 
 function useTimer(minutes) {
   const [secondsLeft, setSecondsLeft] = useState(null)
@@ -46,38 +46,41 @@ function useTimer(minutes) {
 
 function StepTimer({ minutes }) {
   const { display, running, done, progress, start, pause, reset } = useTimer(minutes)
-  const circumference = 2 * Math.PI * 28
+  const r = 28
+  const circumference = 2 * Math.PI * r
 
   return (
-    <div style={timerStyles.wrap}>
-      <div style={timerStyles.circle}>
-        <svg width="80" height="80" viewBox="0 0 80 80">
-          <circle cx="40" cy="40" r="28" fill="none" stroke="rgba(200,92,45,0.15)" strokeWidth="5" />
+    <div style={timerS.wrap}>
+      <div style={timerS.circle}>
+        <svg width="72" height="72" viewBox="0 0 72 72">
+          <circle cx="36" cy="36" r={r} fill="none" stroke="var(--color-border)" strokeWidth="4" />
           <circle
-            cx="40" cy="40" r="28" fill="none"
-            stroke={done ? '#2d6a4f' : '#c85c2d'} strokeWidth="5"
-            strokeLinecap="round"
+            cx="36" cy="36" r={r} fill="none"
+            stroke={done ? 'var(--color-success)' : 'var(--color-accent)'}
+            strokeWidth="4" strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={circumference * (1 - progress)}
-            transform="rotate(-90 40 40)"
+            transform="rotate(-90 36 36)"
             style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.3s' }}
           />
         </svg>
-        <div style={timerStyles.display}>
-          <span style={{ ...timerStyles.time, color: done ? 'var(--color-success)' : 'inherit' }}>{display}</span>
+        <div style={timerS.display}>
+          <span style={{ ...timerS.time, color: done ? 'var(--color-success)' : 'var(--color-text-primary)' }}>
+            {display}
+          </span>
         </div>
       </div>
-      <div style={timerStyles.controls}>
+      <div style={timerS.controls}>
         {done ? (
-          <span style={timerStyles.doneLabel}>Done!</span>
+          <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--color-success)' }}>Done!</span>
         ) : running ? (
-          <button style={timerStyles.btn} onClick={pause}>Pause</button>
+          <button className="btn-primary btn-sm" onClick={pause}>Pause</button>
         ) : (
-          <button style={timerStyles.btn} onClick={start}>
-            {secondsLeft !== null && secondsLeft < minutes * 60 ? 'Resume' : 'Start timer'}
+          <button className="btn-primary btn-sm" onClick={start}>
+            {secondsLeft !== null && secondsLeft < minutes * 60 ? 'Resume' : 'Start'}
           </button>
         )}
-        <button style={timerStyles.resetBtn} onClick={reset}>Reset</button>
+        <button className="btn-secondary btn-sm" onClick={reset}>Reset</button>
       </div>
     </div>
   )
@@ -92,6 +95,7 @@ export default function CookModePage() {
   const [current, setCurrent] = useState(0)
   const [loading, setLoading] = useState(true)
   const [done, setDone] = useState(false)
+  const [tab, setTab] = useState('steps')
 
   useEffect(() => { fetchData() }, [id])
 
@@ -119,14 +123,14 @@ export default function CookModePage() {
 
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-      <div style={styles.spinner} />
+      <div style={s.spinner} />
     </div>
   )
 
   if (!recipe || steps.length === 0) return (
-    <div style={{ textAlign: 'center', padding: '4rem' }}>
-      <p>No steps found for this recipe.</p>
-      <button onClick={() => navigate(-1)}>Go back</button>
+    <div style={{ textAlign: 'center', padding: 'var(--space-4xl)' }}>
+      <p style={{ marginBottom: 'var(--space-lg)' }}>No steps found for this recipe.</p>
+      <button className="btn-secondary" onClick={() => navigate(-1)}>Go back</button>
     </div>
   )
 
@@ -134,69 +138,93 @@ export default function CookModePage() {
   const progressPct = done ? 100 : ((current) / steps.length) * 100
 
   return (
-    <div style={styles.page} className="animate-fade-in">
+    <div className="animate-fade-in" style={s.page}>
       {/* Header */}
-      <div style={styles.header}>
-        <button style={styles.exitBtn} onClick={() => navigate(`/recipes/${id}`)}>
-          <X size={18} /> Exit cook mode
+      <div style={s.header}>
+        <button style={s.exitBtn} onClick={() => navigate(`/recipes/${id}`)}>
+          <X size={18} /> Exit
         </button>
-        <div style={styles.recipeName}>{recipe.title}</div>
-        <div style={styles.stepCount}>
-          {done ? 'Complete!' : `Step ${current + 1} of ${steps.length}`}
+        <div style={s.recipeName}>{recipe.title}</div>
+        <div style={s.stepCount}>
+          {done ? 'Complete!' : `${current + 1} / ${steps.length}`}
         </div>
       </div>
 
       {/* Progress bar */}
-      <div style={styles.progressTrack}>
-        <div style={{ ...styles.progressFill, width: `${progressPct}%` }} />
+      <div style={s.progressTrack}>
+        <div style={{ ...s.progressFill, width: `${progressPct}%` }} />
       </div>
 
       {/* Step dots */}
-      <div style={styles.dots}>
+      <div style={s.dots}>
         {steps.map((_, i) => (
           <button
             key={i}
             style={{
-              ...styles.dot,
-              background: i < current || done ? 'var(--color-accent)' : i === current ? 'var(--color-accent)' : 'var(--color-border-strong)',
-              opacity: i === current && !done ? 1 : i < current || done ? 0.7 : 0.3,
-              transform: i === current && !done ? 'scale(1.3)' : 'scale(1)',
+              ...s.dot,
+              background: i <= current || done ? 'var(--color-accent)' : 'var(--color-border-strong)',
+              opacity: i === current && !done ? 1 : i < current || done ? 0.5 : 0.25,
+              transform: i === current && !done ? 'scale(1.4)' : 'scale(1)',
             }}
             onClick={() => { setDone(false); setCurrent(i) }}
           />
         ))}
       </div>
 
-      {/* Main content */}
-      {done ? (
-        <div style={styles.doneScreen}>
-          <div style={styles.doneIcon}>
-            <CheckCircle size={64} color="var(--color-success)" />
-          </div>
-          <h2 style={styles.doneTitle}>You did it!</h2>
-          <p style={styles.doneText}>{recipe.title} is ready. Time to eat!</p>
-          <div style={styles.doneActions}>
-            <button style={styles.secondaryBtn} onClick={goPrev}>
+      {/* Tab switcher */}
+      <div className="tab-bar">
+        <button
+          className={`tab-btn${tab === 'steps' ? ' active' : ''}`}
+          onClick={() => setTab('steps')}
+        >
+          Steps
+        </button>
+        <button
+          className={`tab-btn${tab === 'ingredients' ? ' active' : ''}`}
+          onClick={() => setTab('ingredients')}
+        >
+          Ingredients
+        </button>
+      </div>
+
+      {tab === 'ingredients' ? (
+        <div style={s.ingredientsPanel}>
+          <ul style={s.ingList}>
+            {ingredients.map(ing => (
+              <li key={ing.id} style={s.ingItem}>
+                <span style={s.ingAmount}>{[ing.amount, ing.unit].filter(Boolean).join(' ')}</span>
+                <span>{ing.name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : done ? (
+        <div style={s.doneScreen}>
+          <CheckCircle size={56} color="var(--color-success)" />
+          <h2 style={{ fontSize: '1.75rem' }}>Bon appetit!</h2>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.0625rem' }}>
+            {recipe.title} is ready. Time to eat!
+          </p>
+          <div style={s.doneActions}>
+            <button className="btn-secondary" onClick={goPrev}>
               <ArrowLeft size={15} /> Review steps
             </button>
-            <button style={styles.primaryBtn} onClick={() => navigate(`/recipes/${id}`)}>
+            <button className="btn-primary" onClick={() => navigate(`/recipes/${id}`)}>
               Back to recipe
             </button>
           </div>
         </div>
       ) : (
-        <div style={styles.body}>
-          {/* Step card */}
-          <div style={styles.stepCard} key={current}>
-            <div style={styles.stepNumRow}>
-              <span style={styles.stepNumLabel}>Step {current + 1}</span>
-            </div>
-            <p style={styles.stepText}>{step.instruction}</p>
+        <>
+          {/* Step content */}
+          <div style={s.stepCard} key={current}>
+            <div style={s.stepLabel}>Step {current + 1}</div>
+            <p style={s.stepText}>{step.instruction}</p>
 
             {step.timer_minutes && (
-              <div style={styles.timerSection}>
-                <div style={styles.timerLabel}>
-                  <Clock size={14} color="var(--color-accent)" /> {step.timer_minutes} minute timer
+              <div style={s.timerSection}>
+                <div style={s.timerLabel}>
+                  <Clock size={14} color="var(--color-accent)" /> {step.timer_minutes} min timer
                 </div>
                 <StepTimer minutes={step.timer_minutes} />
               </div>
@@ -204,156 +232,132 @@ export default function CookModePage() {
           </div>
 
           {/* Navigation */}
-          <div style={styles.nav}>
+          <div style={s.nav}>
             <button
-              style={{ ...styles.navBtn, opacity: current === 0 ? 0.35 : 1 }}
+              className="btn-secondary"
+              style={{ flex: 1, justifyContent: 'center', opacity: current === 0 ? 0.35 : 1 }}
               onClick={goPrev}
               disabled={current === 0}
             >
-              <ArrowLeft size={18} /> Previous
+              <ArrowLeft size={16} /> Previous
             </button>
-            <button style={styles.navBtnPrimary} onClick={goNext}>
-              {current === steps.length - 1 ? 'Finish' : 'Next step'} <ArrowRight size={18} />
+            <button
+              className="btn-primary"
+              style={{ flex: 1, justifyContent: 'center' }}
+              onClick={goNext}
+            >
+              {current === steps.length - 1 ? 'Finish' : 'Next step'} <ArrowRight size={16} />
             </button>
           </div>
-
-          {/* Ingredients sidebar */}
-          <div style={styles.ingredientsPanel}>
-            <h3 style={styles.ingPanelTitle}>Ingredients</h3>
-            <ul style={styles.ingList}>
-              {ingredients.map(ing => (
-                <li key={ing.id} style={styles.ingItem}>
-                  <span style={styles.ingAmount}>{[ing.amount, ing.unit].filter(Boolean).join(' ')}</span>
-                  <span>{ing.name}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        </>
       )}
     </div>
   )
 }
 
-const styles = {
-  page: { maxWidth: 760, margin: '0 auto', paddingBottom: '3rem' },
+const s = {
+  page: { maxWidth: 680, margin: '0 auto', paddingBottom: 'var(--space-3xl)' },
   header: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    marginBottom: '1rem', gap: '1rem',
+    marginBottom: 'var(--space-lg)', gap: 'var(--space-md)',
   },
   exitBtn: {
-    display: 'flex', alignItems: 'center', gap: '0.375rem',
+    display: 'flex', alignItems: 'center', gap: '6px',
     background: 'none', border: 'none', cursor: 'pointer',
     color: 'var(--color-text-secondary)', fontSize: '0.875rem',
     fontFamily: 'var(--font-body)', padding: 0,
   },
   recipeName: {
-    fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 500,
+    fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 600,
     color: 'var(--color-text-primary)', flex: 1, textAlign: 'center',
+    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
   },
-  stepCount: { fontSize: '0.875rem', color: 'var(--color-text-tertiary)', whiteSpace: 'nowrap' },
+  stepCount: {
+    fontSize: '0.875rem', color: 'var(--color-text-tertiary)',
+    whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums',
+  },
   progressTrack: {
     height: 3, background: 'var(--color-border)', borderRadius: 99,
-    marginBottom: '1rem', overflow: 'hidden',
+    marginBottom: 'var(--space-lg)', overflow: 'hidden',
   },
   progressFill: {
     height: '100%', background: 'var(--color-accent)',
-    borderRadius: 99, transition: 'width 0.4s ease',
+    borderRadius: 99, transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
   },
-  dots: { display: 'flex', gap: '6px', justifyContent: 'center', marginBottom: '2rem', flexWrap: 'wrap' },
+  dots: {
+    display: 'flex', gap: 6, justifyContent: 'center',
+    marginBottom: 'var(--space-xl)', flexWrap: 'wrap',
+  },
   dot: {
-    width: 8, height: 8, borderRadius: '50%', border: 'none',
+    width: 7, height: 7, borderRadius: '50%', border: 'none',
     cursor: 'pointer', transition: 'all 0.2s', padding: 0,
   },
-  body: { display: 'flex', flexDirection: 'column', gap: '1.5rem' },
   stepCard: {
     background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-xl)', padding: '2rem',
-    boxShadow: 'var(--shadow-md)', animation: 'fadeIn 0.25s ease',
+    borderRadius: 'var(--radius-xl)', padding: 'var(--space-2xl)',
+    marginBottom: 'var(--space-xl)',
+    animation: 'fadeUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
   },
-  stepNumRow: { marginBottom: '1rem' },
-  stepNumLabel: {
-    fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase',
+  stepLabel: {
+    fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase',
     letterSpacing: '0.08em', color: 'var(--color-accent)',
+    marginBottom: 'var(--space-md)', fontFamily: 'var(--font-display)',
   },
-  stepText: { fontSize: '1.25rem', lineHeight: 1.75, color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)' },
+  stepText: {
+    fontSize: '1.25rem', lineHeight: 1.7,
+    color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)',
+  },
   timerSection: {
-    marginTop: '1.75rem', paddingTop: '1.5rem',
+    marginTop: 'var(--space-2xl)', paddingTop: 'var(--space-xl)',
     borderTop: '1px solid var(--color-border)',
   },
   timerLabel: {
-    display: 'flex', alignItems: 'center', gap: '0.375rem',
-    fontSize: '0.875rem', color: 'var(--color-text-secondary)', marginBottom: '1rem',
+    display: 'flex', alignItems: 'center', gap: '6px',
+    fontSize: '0.875rem', color: 'var(--color-text-secondary)',
+    marginBottom: 'var(--space-lg)',
   },
-  nav: { display: 'flex', gap: '0.75rem', justifyContent: 'space-between' },
-  navBtn: {
-    display: 'flex', alignItems: 'center', gap: '0.5rem',
-    padding: '0.75rem 1.25rem', border: '1px solid var(--color-border-strong)',
-    borderRadius: 'var(--radius-md)', background: 'none',
-    color: 'var(--color-text-secondary)', fontSize: '0.9375rem',
-    cursor: 'pointer', fontFamily: 'var(--font-body)',
-  },
-  navBtnPrimary: {
-    display: 'flex', alignItems: 'center', gap: '0.5rem',
-    padding: '0.75rem 1.75rem',
-    background: 'var(--color-accent)', color: '#fff', border: 'none',
-    borderRadius: 'var(--radius-md)', fontSize: '0.9375rem', fontWeight: 500,
-    cursor: 'pointer', fontFamily: 'var(--font-body)', marginLeft: 'auto',
-  },
+  nav: { display: 'flex', gap: 'var(--space-md)' },
   ingredientsPanel: {
     background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-lg)', padding: '1.25rem',
-    boxShadow: 'var(--shadow-sm)',
+    borderRadius: 'var(--radius-lg)', padding: 'var(--space-xl)',
   },
-  ingPanelTitle: { fontSize: '0.875rem', marginBottom: '0.875rem', color: 'var(--color-text-secondary)' },
-  ingList: { listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0' },
+  ingList: { listStyle: 'none', display: 'flex', flexDirection: 'column' },
   ingItem: {
-    display: 'flex', gap: '0.75rem', padding: '0.5rem 0',
-    borderBottom: '1px solid var(--color-border)', fontSize: '0.875rem',
+    display: 'flex', gap: 'var(--space-md)', padding: '10px 0',
+    borderBottom: '1px solid var(--color-border)', fontSize: '0.9375rem',
     color: 'var(--color-text-primary)',
   },
-  ingAmount: { color: 'var(--color-text-tertiary)', minWidth: '80px', flexShrink: 0 },
+  ingAmount: {
+    color: 'var(--color-text-tertiary)', minWidth: 72, flexShrink: 0,
+    fontVariantNumeric: 'tabular-nums',
+  },
   doneScreen: {
     display: 'flex', flexDirection: 'column', alignItems: 'center',
-    justifyContent: 'center', gap: '1rem', padding: '3rem 2rem', textAlign: 'center',
+    justifyContent: 'center', gap: 'var(--space-md)',
+    padding: 'var(--space-3xl) var(--space-2xl)', textAlign: 'center',
   },
-  doneIcon: { animation: 'fadeIn 0.4s ease' },
-  doneTitle: { fontSize: '2rem', fontFamily: 'var(--font-display)' },
-  doneText: { fontSize: '1.0625rem', color: 'var(--color-text-secondary)' },
-  doneActions: { display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap', justifyContent: 'center' },
-  secondaryBtn: {
-    display: 'flex', alignItems: 'center', gap: '0.375rem',
-    padding: '0.625rem 1.25rem', border: '1px solid var(--color-border-strong)',
-    borderRadius: 'var(--radius-md)', background: 'none', color: 'var(--color-text-secondary)',
-    fontSize: '0.9375rem', cursor: 'pointer', fontFamily: 'var(--font-body)',
+  doneActions: {
+    display: 'flex', gap: 'var(--space-md)', marginTop: 'var(--space-lg)',
+    flexWrap: 'wrap', justifyContent: 'center',
   },
-  primaryBtn: {
-    padding: '0.625rem 1.5rem', background: 'var(--color-accent)', color: '#fff',
-    border: 'none', borderRadius: 'var(--radius-md)',
-    fontSize: '0.9375rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-body)',
+  spinner: {
+    width: 28, height: 28,
+    border: '2px solid var(--color-border)',
+    borderTopColor: 'var(--color-accent)',
+    borderRadius: '50%', animation: 'spin 0.8s linear infinite',
   },
-  spinner: { width: 32, height: 32, border: '2px solid var(--color-border)', borderTopColor: 'var(--color-accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
 }
 
-const timerStyles = {
-  wrap: { display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' },
-  circle: { position: 'relative', width: 80, height: 80, flexShrink: 0 },
+const timerS = {
+  wrap: { display: 'flex', alignItems: 'center', gap: 'var(--space-xl)', flexWrap: 'wrap' },
+  circle: { position: 'relative', width: 72, height: 72, flexShrink: 0 },
   display: {
     position: 'absolute', inset: 0, display: 'flex',
     alignItems: 'center', justifyContent: 'center',
   },
-  time: { fontSize: '0.875rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' },
-  controls: { display: 'flex', gap: '0.5rem', alignItems: 'center' },
-  btn: {
-    padding: '0.4375rem 1rem', background: 'var(--color-accent)', color: '#fff',
-    border: 'none', borderRadius: 'var(--radius-md)', fontSize: '0.875rem',
-    fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-body)',
+  time: {
+    fontSize: '0.875rem', fontWeight: 600,
+    fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em',
   },
-  resetBtn: {
-    padding: '0.4375rem 0.75rem', background: 'none',
-    border: '1px solid var(--color-border-strong)', color: 'var(--color-text-secondary)',
-    borderRadius: 'var(--radius-md)', fontSize: '0.875rem',
-    cursor: 'pointer', fontFamily: 'var(--font-body)',
-  },
-  doneLabel: { fontSize: '0.9375rem', fontWeight: 500, color: 'var(--color-success)' },
+  controls: { display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' },
 }

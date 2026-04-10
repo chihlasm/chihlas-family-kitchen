@@ -1,63 +1,65 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams, NavLink } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import { Clock, Users, ChefHat, Search, Plus } from 'lucide-react'
+import { Clock, Users, Search, Plus } from 'lucide-react'
+
+const CATEGORIES = ['Breakfast', 'Mains', 'Sides', 'Desserts', 'Soups', 'Sauces', 'Drinks']
 
 const CATEGORY_COLORS = {
-  breakfast: { bg: '#fef9ee', border: '#fde68a', text: '#92400e' },
-  mains:     { bg: '#eff6ff', border: '#bfdbfe', text: '#1e40af' },
-  sides:     { bg: '#f0fdf4', border: '#bbf7d0', text: '#166534' },
-  desserts:  { bg: '#fdf4ff', border: '#e9d5ff', text: '#6b21a8' },
-  soups:     { bg: '#fff7ed', border: '#fed7aa', text: '#9a3412' },
-  sauces:    { bg: '#fef2f2', border: '#fecaca', text: '#991b1b' },
-  drinks:    { bg: '#ecfeff', border: '#a5f3fc', text: '#155e75' },
+  breakfast: { bg: 'oklch(0.95 0.04 85)',  text: 'oklch(0.45 0.10 75)' },
+  mains:     { bg: 'oklch(0.94 0.035 250)', text: 'oklch(0.42 0.10 250)' },
+  sides:     { bg: 'oklch(0.95 0.04 155)',  text: 'oklch(0.40 0.10 155)' },
+  desserts:  { bg: 'oklch(0.94 0.035 310)', text: 'oklch(0.42 0.10 310)' },
+  soups:     { bg: 'oklch(0.95 0.04 55)',   text: 'oklch(0.45 0.12 50)' },
+  sauces:    { bg: 'oklch(0.95 0.035 25)',  text: 'oklch(0.45 0.13 25)' },
+  drinks:    { bg: 'oklch(0.95 0.035 200)', text: 'oklch(0.40 0.09 200)' },
 }
 
-function RecipeCard({ recipe, onClick }) {
+function RecipeCard({ recipe, onClick, index }) {
   const cat = recipe.category?.toLowerCase()
-  const colors = CATEGORY_COLORS[cat] || { bg: '#f9fafb', border: '#e5e7eb', text: '#374151' }
+  const colors = CATEGORY_COLORS[cat] || { bg: 'var(--color-border)', text: 'var(--color-text-secondary)' }
 
   return (
-    <div style={styles.card} onClick={onClick} className="animate-fade-in">
-      {recipe.image_url ? (
-        <div style={styles.cardImg}>
-          <img src={recipe.image_url} alt={recipe.title} style={styles.cardImgEl} />
-        </div>
-      ) : (
-        <div style={{ ...styles.cardImgPlaceholder, background: colors.bg }}>
-          <ChefHat size={32} color={colors.text} opacity={0.5} />
+    <div
+      className="recipe-card stagger-item"
+      style={{ '--i': index }}
+      onClick={onClick}
+    >
+      {recipe.image_url && (
+        <div style={cardStyles.img}>
+          <img src={recipe.image_url} alt="" style={cardStyles.imgEl} />
         </div>
       )}
-      <div style={styles.cardBody}>
-        <div style={styles.cardMeta}>
+      <div style={cardStyles.body}>
+        <div style={cardStyles.meta}>
           {recipe.category && (
-            <span style={{ ...styles.catBadge, background: colors.bg, border: `1px solid ${colors.border}`, color: colors.text }}>
+            <span style={{ ...cardStyles.badge, background: colors.bg, color: colors.text }}>
               {recipe.category}
             </span>
           )}
           {recipe.is_family_original && (
-            <span style={styles.familyBadge}>Family original</span>
+            <span style={cardStyles.familyBadge}>Family original</span>
           )}
         </div>
-        <h3 style={styles.cardTitle}>{recipe.title}</h3>
+        <h3 style={cardStyles.title}>{recipe.title}</h3>
         {recipe.description && (
-          <p style={styles.cardDesc}>{recipe.description}</p>
+          <p style={cardStyles.desc}>{recipe.description}</p>
         )}
-        <div style={styles.cardStats}>
+        <div style={cardStyles.stats}>
           {recipe.prep_time_minutes && (
-            <span style={styles.stat}>
+            <span style={cardStyles.stat}>
               <Clock size={13} /> {recipe.prep_time_minutes + (recipe.cook_time_minutes || 0)} min
             </span>
           )}
           {recipe.servings && (
-            <span style={styles.stat}>
+            <span style={cardStyles.stat}>
               <Users size={13} /> {recipe.servings}
             </span>
           )}
           {recipe.profiles?.display_name && (
-            <span style={{ ...styles.stat, marginLeft: 'auto', color: 'var(--color-text-tertiary)' }}>
-              by {recipe.profiles.display_name}
+            <span style={{ ...cardStyles.stat, marginLeft: 'auto', color: 'var(--color-text-tertiary)' }}>
+              {recipe.profiles.display_name}
             </span>
           )}
         </div>
@@ -71,11 +73,10 @@ export default function RecipesPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const navigate = useNavigate()
+  const { cat } = useParams()
   const { user } = useAuth()
 
-  useEffect(() => {
-    fetchRecipes()
-  }, [])
+  useEffect(() => { fetchRecipes() }, [])
 
   async function fetchRecipes() {
     setLoading(true)
@@ -93,67 +94,97 @@ export default function RecipesPage() {
     setLoading(false)
   }
 
-  const filtered = recipes.filter(r =>
-    r.title.toLowerCase().includes(search.toLowerCase()) ||
-    r.category?.toLowerCase().includes(search.toLowerCase()) ||
-    r.description?.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = recipes.filter(r => {
+    const matchSearch = !search ||
+      r.title.toLowerCase().includes(search.toLowerCase()) ||
+      r.category?.toLowerCase().includes(search.toLowerCase()) ||
+      r.description?.toLowerCase().includes(search.toLowerCase())
+    const matchCat = !cat || r.category?.toLowerCase() === cat
+    return matchSearch && matchCat
+  })
+
+  const pageTitle = cat
+    ? cat.charAt(0).toUpperCase() + cat.slice(1)
+    : 'All Recipes'
 
   return (
-    <div>
-      {/* Page header */}
-      <div style={styles.pageHeader}>
+    <div className="animate-fade-in">
+      <div style={s.header}>
         <div>
-          <h1 style={styles.pageTitle}>All Recipes</h1>
-          <p style={styles.pageSubtitle}>{recipes.length} recipe{recipes.length !== 1 ? 's' : ''} in the family collection</p>
+          <h1>{pageTitle}</h1>
+          <p style={s.subtitle}>
+            {filtered.length} recipe{filtered.length !== 1 ? 's' : ''}
+            {cat ? ` in ${pageTitle.toLowerCase()}` : ' in the family collection'}
+          </p>
         </div>
-        <button style={styles.addBtn} onClick={() => navigate('/recipes/new')}>
-          <Plus size={16} />
-          Add Recipe
+        <button className="btn-primary" onClick={() => navigate('/recipes/new')}>
+          <Plus size={16} /> Add Recipe
         </button>
       </div>
 
-      {/* Search */}
-      <div style={styles.searchWrap}>
-        <Search size={16} style={styles.searchIcon} />
+      <div style={s.searchWrap}>
+        <Search size={16} style={s.searchIcon} />
         <input
-          style={styles.searchInput}
+          className="form-input"
+          style={{ maxWidth: 400, paddingLeft: 'var(--space-2xl)' }}
           type="text"
-          placeholder="Search by name, category…"
+          placeholder="Search recipes…"
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
       </div>
 
-      {/* Content */}
+      <div className="category-pills" style={{ marginBottom: 'var(--space-xl)' }}>
+        <NavLink to="/" end className={({ isActive }) => `pill${isActive ? ' active' : ''}`}>
+          All
+        </NavLink>
+        {CATEGORIES.map(c => (
+          <NavLink
+            key={c}
+            to={`/category/${c.toLowerCase()}`}
+            className={({ isActive }) => `pill${isActive ? ' active' : ''}`}
+          >
+            {c}
+          </NavLink>
+        ))}
+      </div>
+
       {loading ? (
-        <div style={styles.empty}>
-          <div style={styles.spinner} />
+        <div className="recipe-grid">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} style={s.skeletonCard}>
+              <div className="skeleton" style={{ height: 120 }} />
+              <div style={{ padding: 'var(--space-lg)' }}>
+                <div className="skeleton" style={{ height: 12, width: '40%', marginBottom: 'var(--space-sm)' }} />
+                <div className="skeleton" style={{ height: 16, width: '75%', marginBottom: 'var(--space-md)' }} />
+                <div className="skeleton" style={{ height: 12, width: '55%' }} />
+              </div>
+            </div>
+          ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div style={styles.empty}>
-          {search ? (
-            <>
-              <p style={styles.emptyTitle}>No recipes match "{search}"</p>
-              <p style={styles.emptyText}>Try a different search or browse all recipes.</p>
-            </>
-          ) : (
-            <>
-              <ChefHat size={40} color="var(--color-text-tertiary)" />
-              <p style={styles.emptyTitle}>No recipes yet</p>
-              <p style={styles.emptyText}>Add your first family recipe to get started.</p>
-              <button style={styles.addBtn} onClick={() => navigate('/recipes/new')}>
-                <Plus size={16} /> Add your first recipe
-              </button>
-            </>
+        <div style={s.empty}>
+          <p style={s.emptyTitle}>
+            {search ? `No recipes match "${search}"` : 'Your family cookbook starts here'}
+          </p>
+          <p style={s.emptyText}>
+            {search
+              ? 'Try a different search or browse all recipes.'
+              : 'Add your first recipe and start building your collection.'}
+          </p>
+          {!search && (
+            <button className="btn-primary" onClick={() => navigate('/recipes/new')} style={{ marginTop: 'var(--space-lg)' }}>
+              <Plus size={16} /> Add your first recipe
+            </button>
           )}
         </div>
       ) : (
-        <div style={styles.grid}>
-          {filtered.map(recipe => (
+        <div className="recipe-grid">
+          {filtered.map((recipe, idx) => (
             <RecipeCard
               key={recipe.id}
               recipe={recipe}
+              index={idx}
               onClick={() => navigate(`/recipes/${recipe.id}`)}
             />
           ))}
@@ -163,170 +194,115 @@ export default function RecipesPage() {
   )
 }
 
-const styles = {
-  pageHeader: {
+const s = {
+  header: {
     display: 'flex',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: '1.5rem',
-    gap: '1rem',
+    marginBottom: 'var(--space-xl)',
+    gap: 'var(--space-lg)',
     flexWrap: 'wrap',
   },
-  pageTitle: {
-    fontSize: '1.75rem',
-    marginBottom: '0.25rem',
-  },
-  pageSubtitle: {
+  subtitle: {
     color: 'var(--color-text-secondary)',
     fontSize: '0.9375rem',
-  },
-  addBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.375rem',
-    padding: '0.5625rem 1.125rem',
-    background: 'var(--color-accent)',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: 'var(--radius-md)',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    cursor: 'pointer',
-    fontFamily: 'var(--font-body)',
-    whiteSpace: 'nowrap',
+    marginTop: 'var(--space-xs)',
   },
   searchWrap: {
     position: 'relative',
-    marginBottom: '1.75rem',
+    marginBottom: 'var(--space-lg)',
   },
   searchIcon: {
     position: 'absolute',
-    left: '0.875rem',
+    left: 'var(--space-md)',
     top: '50%',
     transform: 'translateY(-50%)',
     color: 'var(--color-text-tertiary)',
     pointerEvents: 'none',
   },
-  searchInput: {
-    width: '100%',
-    maxWidth: '420px',
-    padding: '0.625rem 0.875rem 0.625rem 2.5rem',
-    border: '1px solid var(--color-border-strong)',
-    borderRadius: 'var(--radius-md)',
-    background: 'var(--color-surface)',
-    color: 'var(--color-text-primary)',
-    fontSize: '0.9375rem',
-    outline: 'none',
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-    gap: '1.25rem',
-  },
-  card: {
+  skeletonCard: {
     background: 'var(--color-surface)',
     border: '1px solid var(--color-border)',
     borderRadius: 'var(--radius-lg)',
     overflow: 'hidden',
-    cursor: 'pointer',
-    transition: 'box-shadow 0.2s, transform 0.15s',
-    boxShadow: 'var(--shadow-sm)',
-  },
-  cardImg: {
-    height: 180,
-    overflow: 'hidden',
-  },
-  cardImgEl: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
-  cardImgPlaceholder: {
-    height: 140,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardBody: {
-    padding: '1rem 1.125rem 1.125rem',
-  },
-  cardMeta: {
-    display: 'flex',
-    gap: '0.375rem',
-    flexWrap: 'wrap',
-    marginBottom: '0.5rem',
-  },
-  catBadge: {
-    fontSize: '0.6875rem',
-    fontWeight: 500,
-    padding: '2px 8px',
-    borderRadius: 20,
-    textTransform: 'capitalize',
-  },
-  familyBadge: {
-    fontSize: '0.6875rem',
-    fontWeight: 500,
-    padding: '2px 8px',
-    borderRadius: 20,
-    background: 'var(--color-accent-light)',
-    border: '1px solid var(--color-accent-border)',
-    color: 'var(--color-accent)',
-  },
-  cardTitle: {
-    fontSize: '1rem',
-    fontFamily: 'var(--font-display)',
-    fontWeight: 500,
-    marginBottom: '0.375rem',
-    lineHeight: 1.3,
-  },
-  cardDesc: {
-    fontSize: '0.8125rem',
-    color: 'var(--color-text-secondary)',
-    lineHeight: 1.5,
-    marginBottom: '0.75rem',
-    display: '-webkit-box',
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: 'vertical',
-    overflow: 'hidden',
-  },
-  cardStats: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.875rem',
-    flexWrap: 'wrap',
-  },
-  stat: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.3rem',
-    fontSize: '0.8125rem',
-    color: 'var(--color-text-secondary)',
   },
   empty: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '0.75rem',
-    padding: '5rem 2rem',
-    color: 'var(--color-text-secondary)',
+    gap: 'var(--space-md)',
+    padding: 'var(--space-4xl) var(--space-2xl)',
     textAlign: 'center',
   },
   emptyTitle: {
-    fontSize: '1rem',
-    fontWeight: 500,
+    fontSize: '1.125rem',
+    fontWeight: 600,
+    fontFamily: 'var(--font-display)',
     color: 'var(--color-text-primary)',
   },
   emptyText: {
-    fontSize: '0.9rem',
+    fontSize: '0.9375rem',
     color: 'var(--color-text-secondary)',
+    maxWidth: 360,
   },
-  spinner: {
-    width: 32,
-    height: 32,
-    border: '2px solid var(--color-border)',
-    borderTopColor: 'var(--color-accent)',
-    borderRadius: '50%',
-    animation: 'spin 0.8s linear infinite',
+}
+
+const cardStyles = {
+  img: { height: 160, overflow: 'hidden' },
+  imgEl: { width: '100%', height: '100%', objectFit: 'cover' },
+  body: { padding: 'var(--space-lg)' },
+  meta: {
+    display: 'flex',
+    gap: 'var(--space-sm)',
+    flexWrap: 'wrap',
+    marginBottom: 'var(--space-sm)',
+  },
+  badge: {
+    fontSize: '0.6875rem',
+    fontWeight: 600,
+    padding: '2px 10px',
+    borderRadius: 99,
+    textTransform: 'capitalize',
+    letterSpacing: '0.02em',
+  },
+  familyBadge: {
+    fontSize: '0.6875rem',
+    fontWeight: 600,
+    padding: '2px 10px',
+    borderRadius: 99,
+    background: 'var(--color-amber-light)',
+    color: 'var(--color-amber)',
+    letterSpacing: '0.02em',
+  },
+  title: {
+    fontSize: '1.0625rem',
+    fontFamily: 'var(--font-display)',
+    fontWeight: 600,
+    marginBottom: 'var(--space-xs)',
+    lineHeight: 1.3,
+  },
+  desc: {
+    fontSize: '0.8125rem',
+    color: 'var(--color-text-secondary)',
+    lineHeight: 1.5,
+    marginBottom: 'var(--space-md)',
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+  },
+  stats: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 'var(--space-md)',
+    flexWrap: 'wrap',
+  },
+  stat: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    fontSize: '0.8125rem',
+    color: 'var(--color-text-secondary)',
   },
 }

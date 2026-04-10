@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import { ShoppingCart, Trash2, CheckSquare, Square, RefreshCw } from 'lucide-react'
+import { ShoppingCart, Trash2, Check, Square, RefreshCw } from 'lucide-react'
 
 export default function ShoppingListPage() {
   const { user } = useAuth()
@@ -46,7 +46,6 @@ export default function ShoppingListPage() {
     await supabase.from('shopping_list').delete().eq('user_id', user.id)
   }
 
-  // Group by recipe
   const byRecipe = items.reduce((acc, item) => {
     const key = item.recipes?.title || 'Other'
     if (!acc[key]) acc[key] = []
@@ -56,78 +55,94 @@ export default function ShoppingListPage() {
 
   const checkedCount = items.filter(i => i.checked).length
   const totalCount = items.length
+  const progressPct = totalCount > 0 ? (checkedCount / totalCount) * 100 : 0
 
   return (
-    <div>
-      <div style={styles.header}>
+    <div className="animate-fade-in">
+      <div style={s.header}>
         <div>
-          <h1 style={styles.title}>Shopping List</h1>
-          <p style={styles.subtitle}>
-            {totalCount === 0 ? 'Your list is empty' : `${checkedCount} of ${totalCount} items checked off`}
+          <h1>Shopping List</h1>
+          <p style={s.subtitle}>
+            {totalCount === 0
+              ? 'Your list is empty'
+              : `${checkedCount} of ${totalCount} items checked off`}
           </p>
         </div>
-        <div style={styles.headerActions}>
+        <div style={s.headerActions}>
           {checkedCount > 0 && (
-            <button style={styles.secondaryBtn} onClick={clearChecked}>
-              <RefreshCw size={14} /> Clear checked
+            <button className="btn-secondary btn-sm" onClick={clearChecked}>
+              <RefreshCw size={13} /> Clear checked
             </button>
           )}
           {totalCount > 0 && (
-            <button style={{ ...styles.secondaryBtn, color: '#c0392b', borderColor: '#fecaca' }} onClick={clearAll}>
-              <Trash2 size={14} /> Clear all
+            <button className="btn-secondary btn-sm btn-danger" onClick={clearAll}>
+              <Trash2 size={13} /> Clear all
             </button>
           )}
         </div>
       </div>
 
-      {/* Progress bar */}
       {totalCount > 0 && (
-        <div style={styles.progressWrap}>
-          <div style={{ ...styles.progressBar, width: `${(checkedCount / totalCount) * 100}%` }} />
+        <div style={s.progressWrap}>
+          <div style={{ ...s.progressBar, width: `${progressPct}%` }} />
         </div>
       )}
 
       {loading ? (
-        <div style={styles.empty}><div style={styles.spinner} /></div>
+        <div style={s.empty}><div style={s.spinner} /></div>
       ) : totalCount === 0 ? (
-        <div style={styles.empty}>
-          <ShoppingCart size={40} color="var(--color-text-tertiary)" />
-          <p style={styles.emptyTitle}>Your shopping list is empty</p>
-          <p style={styles.emptyText}>Open any recipe and tap "Add to shopping list" to populate it.</p>
+        <div style={s.empty}>
+          <ShoppingCart size={36} color="var(--color-text-tertiary)" />
+          <p style={s.emptyTitle}>Your shopping list is empty</p>
+          <p style={s.emptyText}>
+            Open any recipe and tap "Add to list" to populate it.
+          </p>
         </div>
       ) : (
-        <div style={styles.groups}>
+        <div style={s.groups}>
           {Object.entries(byRecipe).map(([recipeName, groupItems]) => (
-            <div key={recipeName} style={styles.group}>
-              <div style={styles.groupHeader}>
-                <span style={styles.groupTitle}>{recipeName}</span>
-                <span style={styles.groupCount}>{groupItems.filter(i => i.checked).length}/{groupItems.length}</span>
+            <div key={recipeName} style={s.group}>
+              <div style={s.groupHeader}>
+                <span style={s.groupTitle}>{recipeName}</span>
+                <span style={s.groupCount}>
+                  {groupItems.filter(i => i.checked).length}/{groupItems.length}
+                </span>
               </div>
-              <div style={styles.groupItems}>
+              <div>
                 {groupItems.map(item => (
-                  <div key={item.id} style={{ ...styles.item, opacity: item.checked ? 0.5 : 1 }}>
-                    <button style={styles.checkBtn} onClick={() => toggleItem(item)}>
-                      {item.checked
-                        ? <CheckSquare size={20} color="var(--color-accent)" fill="var(--color-accent-light)" />
-                        : <Square size={20} color="var(--color-border-strong)" />
-                      }
-                    </button>
+                  <div
+                    key={item.id}
+                    style={{ ...s.item, opacity: item.checked ? 0.45 : 1 }}
+                    onClick={() => toggleItem(item)}
+                  >
+                    <div style={s.checkbox}>
+                      {item.checked ? (
+                        <div style={s.checkboxChecked}>
+                          <Check size={12} color="oklch(0.99 0 0)" strokeWidth={3} />
+                        </div>
+                      ) : (
+                        <Square size={20} color="var(--color-border-strong)" />
+                      )}
+                    </div>
                     <div style={{ flex: 1 }}>
                       <span style={{
-                        ...styles.itemName,
+                        ...s.itemName,
                         textDecoration: item.checked ? 'line-through' : 'none',
                         color: item.checked ? 'var(--color-text-tertiary)' : 'var(--color-text-primary)',
                       }}>
                         {item.name}
                       </span>
                       {(item.amount || item.unit) && (
-                        <span style={styles.itemAmount}>
+                        <span style={s.itemAmount}>
                           {[item.amount, item.unit].filter(Boolean).join(' ')}
                         </span>
                       )}
                     </div>
-                    <button style={styles.removeBtn} onClick={() => removeItem(item.id)}>
-                      <Trash2 size={14} />
+                    <button
+                      style={s.removeBtn}
+                      onClick={e => { e.stopPropagation(); removeItem(item.id) }}
+                    >
+                      <Trash2 size={13} />
                     </button>
                   </div>
                 ))}
@@ -140,59 +155,79 @@ export default function ShoppingListPage() {
   )
 }
 
-const styles = {
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem', gap: '1rem', flexWrap: 'wrap' },
-  title: { fontSize: '1.75rem', marginBottom: '0.25rem' },
-  subtitle: { color: 'var(--color-text-secondary)', fontSize: '0.9375rem' },
-  headerActions: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap' },
-  secondaryBtn: {
-    display: 'flex', alignItems: 'center', gap: '0.375rem',
-    padding: '0.4375rem 0.875rem',
-    background: 'none', border: '1px solid var(--color-border-strong)',
-    color: 'var(--color-text-secondary)', borderRadius: 'var(--radius-md)',
-    fontSize: '0.8125rem', cursor: 'pointer', fontFamily: 'var(--font-body)',
+const s = {
+  header: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+    marginBottom: 'var(--space-xl)', gap: 'var(--space-lg)', flexWrap: 'wrap',
   },
+  subtitle: {
+    color: 'var(--color-text-secondary)', fontSize: '0.9375rem',
+    marginTop: 'var(--space-xs)',
+  },
+  headerActions: { display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' },
   progressWrap: {
-    height: 4, background: 'var(--color-border)', borderRadius: 99,
-    marginBottom: '2rem', overflow: 'hidden',
+    height: 3, background: 'var(--color-border)', borderRadius: 99,
+    marginBottom: 'var(--space-2xl)', overflow: 'hidden',
   },
   progressBar: {
     height: '100%', background: 'var(--color-accent)',
-    borderRadius: 99, transition: 'width 0.4s ease',
+    borderRadius: 99, transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
   },
-  groups: { display: 'flex', flexDirection: 'column', gap: '1.25rem' },
+  groups: { display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' },
   group: {
     background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)',
+    borderRadius: 'var(--radius-lg)', overflow: 'hidden',
   },
   groupHeader: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '0.75rem 1.25rem',
+    padding: 'var(--space-md) var(--space-lg)',
     background: 'var(--color-bg)', borderBottom: '1px solid var(--color-border)',
   },
-  groupTitle: { fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text-primary)' },
-  groupCount: { fontSize: '0.75rem', color: 'var(--color-text-tertiary)' },
-  groupItems: { padding: '0.25rem 0' },
+  groupTitle: {
+    fontSize: '0.875rem', fontWeight: 600,
+    color: 'var(--color-text-primary)', fontFamily: 'var(--font-display)',
+  },
+  groupCount: { fontSize: '0.75rem', color: 'var(--color-text-tertiary)', fontVariantNumeric: 'tabular-nums' },
   item: {
-    display: 'flex', alignItems: 'center', gap: '0.75rem',
-    padding: '0.625rem 1.25rem',
+    display: 'flex', alignItems: 'center', gap: 'var(--space-md)',
+    padding: 'var(--space-md) var(--space-lg)',
     borderBottom: '1px solid var(--color-border)',
     transition: 'opacity 0.2s',
+    cursor: 'pointer',
   },
-  checkBtn: { background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0, padding: 0 },
-  itemName: { fontSize: '0.9375rem', display: 'block', transition: 'color 0.2s' },
-  itemAmount: { fontSize: '0.8125rem', color: 'var(--color-text-tertiary)', display: 'block', marginTop: '1px' },
+  checkbox: { flexShrink: 0, display: 'flex', alignItems: 'center' },
+  checkboxChecked: {
+    width: 20, height: 20, borderRadius: 'var(--radius-sm)',
+    background: 'var(--color-accent)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  itemName: { fontSize: '0.9375rem', display: 'block', transition: 'color 0.15s' },
+  itemAmount: {
+    fontSize: '0.8125rem', color: 'var(--color-text-tertiary)',
+    display: 'block', marginTop: 1,
+  },
   removeBtn: {
     background: 'none', border: 'none', cursor: 'pointer',
-    color: 'var(--color-text-tertiary)', padding: '0.25rem',
+    color: 'var(--color-text-tertiary)', padding: 'var(--space-xs)',
     display: 'flex', alignItems: 'center', flexShrink: 0,
+    opacity: 0.5, transition: 'opacity 0.15s',
   },
   empty: {
     display: 'flex', flexDirection: 'column', alignItems: 'center',
-    justifyContent: 'center', gap: '0.75rem', padding: '5rem 2rem',
-    textAlign: 'center',
+    justifyContent: 'center', gap: 'var(--space-md)',
+    padding: 'var(--space-4xl) var(--space-2xl)', textAlign: 'center',
   },
-  emptyTitle: { fontSize: '1rem', fontWeight: 500, color: 'var(--color-text-primary)' },
-  emptyText: { fontSize: '0.9rem', color: 'var(--color-text-secondary)', maxWidth: 320 },
-  spinner: { width: 32, height: 32, border: '2px solid var(--color-border)', borderTopColor: 'var(--color-accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
+  emptyTitle: {
+    fontSize: '1.125rem', fontWeight: 600,
+    fontFamily: 'var(--font-display)', color: 'var(--color-text-primary)',
+  },
+  emptyText: {
+    fontSize: '0.9375rem', color: 'var(--color-text-secondary)', maxWidth: 320,
+  },
+  spinner: {
+    width: 28, height: 28,
+    border: '2px solid var(--color-border)',
+    borderTopColor: 'var(--color-accent)',
+    borderRadius: '50%', animation: 'spin 0.8s linear infinite',
+  },
 }
