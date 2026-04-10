@@ -48,7 +48,7 @@ export default function AuthPage() {
               <path d="M13 17c0 1.66 1.34 3 3 3" stroke="#c85c2d" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
           </div>
-          <h1 style={styles.title}>Family Kitchen</h1>
+          <h1 style={styles.title}>Chihlas Family Kitchen</h1>
           <p style={styles.subtitle}>
             {mode === 'signin' ? 'Welcome back to the table.' : 'Join the family kitchen.'}
           </p>
@@ -103,7 +103,7 @@ export default function AuthPage() {
 
         <div style={styles.toggle}>
           {mode === 'signin' ? (
-            <p>New to Family Kitchen? <button style={styles.link} onClick={() => { setMode('signup'); setError(null); }}>Create an account</button></p>
+            <p>New to Chihlas Family Kitchen? <button style={styles.link} onClick={() => { setMode('signup'); setError(null); }}>Create an account</button></p>
           ) : (
             <p>Already have an account? <button style={styles.link} onClick={() => { setMode('signin'); setError(null); }}>Sign in</button></p>
           )}

@@ -43,7 +43,7 @@ export default function AppLayout() {
           <div style={styles.logoMark}>
             <Utensils size={16} color="#c85c2d" />
           </div>
-          <span style={styles.logoText}>Family Kitchen</span>
+          <span style={styles.logoText}>Chihlas Family Kitchen</span>
           <button style={styles.closeBtn} onClick={() => setMobileOpen(false)}>
             <X size={18} color="rgba(255,255,255,0.5)" />
           </button>
@@ -123,7 +123,7 @@ export default function AppLayout() {
           <button style={styles.menuBtn} onClick={() => setMobileOpen(true)}>
             <Menu size={20} color="var(--color-text-primary)" />
           </button>
-          <span style={styles.mobileTitle}>Family Kitchen</span>
+          <span style={styles.mobileTitle}>Chihlas Family Kitchen</span>
           <button style={styles.addBtnMobile} onClick={() => navigate('/recipes/new')}>
             <Plus size={18} color="var(--color-accent)" />
           </button>
